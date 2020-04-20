@@ -17,7 +17,7 @@ Apify.main(async () => {
         },
         "referrer": "https://nehody.cdv.cz/statistics.php",
         "referrerPolicy": "no-referrer-when-downgrade",
-        "body": "span=day&dateFrom=2020-03-03&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=1",
+        "body": "span=day&dateFrom=2017-01-01&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=1",
         "method": "POST",
         "mode": "cors",
         "credentials": "include"
@@ -81,7 +81,7 @@ Apify.main(async () => {
 
 console.log('Data downloaded..')
     
-const dataset = await Apify.openDataset('NEHODOVOST-V-CR-DATASET-TEST');
+const dataset = await Apify.openDataset('NEHODOVOST-V-CR-DATASET');
 await dataset.pushData(resultAll);
     
 console.log('Data saved..')
