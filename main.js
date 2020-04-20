@@ -79,6 +79,10 @@ Apify.main(async () => {
 
 }
 
-console.log(resultAll)
-
+console.log('Data downloaded..')
+    
+const dataset = await Apify.openDataset('NEHODOVOST-V-CR-DATASET-TEST');
+await dataset.pushData(resultAll);
+    
+console.log('Data saved..')
 });
