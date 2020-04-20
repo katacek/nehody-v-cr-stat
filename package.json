@@ -4,7 +4,7 @@
 	"description": "This is a boilerplate of an Apify actor.",
 	"dependencies": {
 		"apify": "^0.20.0",
-		"node-fetch":  "node-fetch": "^2.6.0"
+		"node-fetch": "^2.6.0"
 	},
 	"devDependencies": {},
 	"scripts": {
