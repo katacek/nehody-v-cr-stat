@@ -17,7 +17,7 @@ Apify.main(async () => {
         },
         "referrer": "https://nehody.cdv.cz/statistics.php",
         "referrerPolicy": "no-referrer-when-downgrade",
-        "body": "span=day&dateFrom=2007-01-01&dateTo=2007-12-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=1",
+        "body": "span=day&dateFrom=2007-01-01&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=1",
         "method": "POST",
         "mode": "cors",
         "credentials": "include"
@@ -32,7 +32,7 @@ Apify.main(async () => {
 
     for (page = 1; page<=numberOfPages; page++) {
 
-        let body = `span=day&dateFrom=2007-01-01&dateTo=2007-12-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=${page}`
+        let body = `span=day&dateFrom=2007-01-01&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=${page}`
         const response2 = await fetch("https://nehody.cdv.cz/handlers/loadTable.php", {
             "headers": {
               "accept": "application/json, text/javascript, */*; q=0.01",
