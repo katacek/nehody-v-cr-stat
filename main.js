@@ -1,101 +1,84 @@
-// This is the main Node.js source code file of your actor.
-// It is referenced from the "scripts" section of the package.json file,
-// so that it can be started by running "npm start".
-
-// Include Apify SDK. For more information, see https://sdk.apify.com/
 const Apify = require('apify');
+const cheerio = require("cheerio");
+
+const fetch = require('node-fetch');
 
 Apify.main(async () => {
-    // Get input of the actor (here only for demonstration purposes).
-    // If you'd like to have your input checked and have Apify display
-    // a user interface for it, add INPUT_SCHEMA.json file to your actor.
-    // For more information, see https://apify.com/docs/actor/input-schema
-    //const input = await Apify.getInput();
-    //console.log('Input:');
-    //console.dir(input);
-
-    // Open a request queue and add a start URL to it
-    const requestQueue = await Apify.openRequestQueue();
-
-    // queue: object, type of array, just few methods (add, remove), request is put at the end (opposite is stack where firt in first out), request is object as well
-    await requestQueue.addRequest({ url: 'https://nehody.cdv.cz/statistics.php#table' });
     
+    const response = await fetch("https://nehody.cdv.cz/handlers/loadTable.php", {
+        "headers": {
+          "accept": "application/json, text/javascript, */*; q=0.01",
+          "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+          "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-origin",
+          "x-requested-with": "XMLHttpRequest"
+        },
+        "referrer": "https://nehody.cdv.cz/statistics.php",
+        "referrerPolicy": "no-referrer-when-downgrade",
+        "body": "span=day&dateFrom=2020-03-03&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=1",
+        "method": "POST",
+        "mode": "cors",
+        "credentials": "include"
+      });
+ 
+    const json = await response.json();
+    //console.log(json)
+    const numberOfAccidents = await json.count;
+    const numberOfPages = Math.ceil(numberOfAccidents / 50);
 
-    // Define a pattern of URLs that the crawler should visit
-    //const pseudoUrls = [new Apify.PseudoUrl('https://www.iana.org/[.*]')];
+    let resultAll=[]
 
-    // Create a crawler that will use headless Chrome / Puppeteer to extract data
-    // from pages and recursively add links to newly-found pages
-    const crawler = new Apify.PuppeteerCrawler({
-        requestQueue,
+    for (page = 1; page<=numberOfPages; page++) {
 
-        // This function is called for every page the crawler visits
-        // puppeteer gets the url from reuqest from request queue, goes to this page and create object page
-        handlePageFunction: async ({ request, page }) =>
-        {
+        let body = `span=day&dateFrom=2020-03-03&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=${page}`
+        const response2 = await fetch("https://nehody.cdv.cz/handlers/loadTable.php", {
+            "headers": {
+              "accept": "application/json, text/javascript, */*; q=0.01",
+              "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+              "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+              "sec-fetch-dest": "empty",
+              "sec-fetch-mode": "cors",
+              "sec-fetch-site": "same-origin",
+              "x-requested-with": "XMLHttpRequest"
+            },
+            "referrer": "https://nehody.cdv.cz/statistics.php",
+            "referrerPolicy": "no-referrer-when-downgrade",
+            "body": body,
+            "method": "POST",
+            "mode": "cors",
+            "credentials": "include"
+          });
+
+
+            const json2 = await response2.json();
+            const $ = await cheerio.load(json2.htmlTable);
             
-            await Apify.utils.puppeteer.injectJQuery(page);
-            await page.evaluate(() =>
-            {
-                $('#dateFrom').attr('value', '2020-03-01');
-                $('#dateTo').attr('value', '2020-03-31');
-            }
-            );
-            //await page.type('#dateFrom', '2020-03-01', { delay: 100 });
-            //await page.type('#dateTo', '2020-03-31', { delay: 100 });
-            await page.type('#admin_area', 'Hlavní město Praha', { delay: 100 });
-            await page.click('#send');
-                
-            // need to be there
-            // use when changing the page url, wait for new url to load
-            // here waiting for a after login page
+            result = [];
+            let tableHeader = $('th:not(.width-50)').map(function(){
+                return $(this).text();
+            }).get();
             
-            await page.waitFor(10000);
-
-            const table = await page.evaluate(() =>
+            let tableData = $('td').map(function(){
+                return $(this).text();
+            }).get();
+            
+            for (i = 0; i < tableData.length; i+=tableHeader.length)
             {
-                result = [];
-                let tableHeader = [];
-                $('th:not(.width-50)').get().forEach(x => tableHeader.push(x.textContent));
-                
-                let tableData = [];
-                $('#table>div>table.grid>tbody>tr>td').get().forEach(x => tableData.push(x.textContent));
-                
-                for (i = 0; i < tableData.length; i+=tableHeader.length)
+                oneRow = {};
+                for (j = 0; j < tableHeader.length; j++)
                 {
-                    for (j = 0; j < tableHeader.length; j++)
-                    {
-                        oneRow = {};
-                        oneRow[tableHeader[j]] = tableData[i+j];
-                    }
-                    result.push(oneRow);
+                    oneRow[tableHeader[j]] = tableData[i+j];
                 }
+                result.push(oneRow);
+            };
 
+            //console.log(result)
+            resultAll = resultAll.concat(result);
 
-                return result[0];
+}
 
+console.log(resultAll)
 
-                //$('#dateTo').attr('value', '2020-03-31');
-            }
-            );
-
-            console.log(table)
-        },
-
-        // This function is called for every page the crawler failed to load
-        // or for which the handlePageFunction() throws at least "maxRequestRetries"-times
-        handleFailedRequestFunction: async ({ request }) => {
-            console.log(`Request ${request.url} failed too many times`);
-            await Apify.pushData({
-                '#debug': Apify.utils.createRequestDebugInfo(request),
-            });
-        },
-
-        maxRequestRetries: 1,
-        maxRequestsPerCrawl: 100,
-        maxConcurrency: 10,
-        handlePageTimeoutSecs: 300
-    });
-
-    await crawler.run();
 });
