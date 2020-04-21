@@ -7,7 +7,7 @@ const fetch = require('node-fetch');
 Apify.main(async () => {
     
     // if you send request to a browser, it returns response 
-    // it can be seen by clicking 'inspect -> network -> XHR -> element you are looking for -> response' on the browser window 
+    // it can be seen by clicking 'inspect -> network -> XHR -> element you are looking for -> response' in the browser window 
     // here, we simulate such a request for a browser to get the response
     // in request body, you can see the filters (date from / to, city, ...)
     // in response, we get the table with all accidents
