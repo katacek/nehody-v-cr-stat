@@ -6,9 +6,9 @@ const fetch = require('node-fetch');
 // define main function which downloads the required data
 Apify.main(async () => {
     
-    // if you send request to a browser, it returns response 
-    // it can be seen by clicking 'inspect -> network -> XHR -> element you are looking for -> response' in the browser window 
-    // here, we simulate such a request for a browser to get the response
+    // if you click on "Odeslat" on a web page, the browser send request to a server which returns response 
+    // it can be seen by clicking 'inspect -> network -> XHR -> request you are looking for -> response' in the browser window 
+    // here, we simulate such a request for a server to get the response
     // in request body, you can see the filters (date from / to, city, ...)
     // in response, we get the table with all accidents
     const response = await fetch("https://nehody.cdv.cz/handlers/loadTable.php", {
@@ -33,9 +33,9 @@ Apify.main(async () => {
     const json = await response.json();
     //console.log(json)
     
-    // the response returns a lot of pages, each with 50 accidents on it
+    // the response returns one page with 50 accidents on it
     // also, it returns the overall number of accidents in 'count'
-    // to know how many pages we need to crawl later on, we counts the specific number of pages 
+    // to know how many pages we need to crawl later on, we count the specific number of pages 
     const numberOfAccidents = await json.count;
     const numberOfPages = Math.ceil(numberOfAccidents / 50);
 
@@ -44,7 +44,7 @@ Apify.main(async () => {
 
     // in this for cycle, we are changing the page number at body part of request
     // starting at 1 and unless we get to the numberOfPages, we are adding number 1 for each cycle
-    // each cycle sends a new request to browser with defined page number
+    // each cycle sends a new request to the server with defined page number
     for (page = 1; page<=numberOfPages; page++) {
 
         let body = `span=day&dateFrom=2007-01-01&dateTo=2020-03-31&types%5B%5D=nehody&area%5Bcode%5D=3018&area%5Bname%5D=Hlavn%C3%AD+m%C4%9Bsto+Praha&orderBy=p2a&orderByDirection=ASC&page=${page}`
@@ -66,15 +66,15 @@ Apify.main(async () => {
             "credentials": "include"
           });
 
-            // as a response, we get the json table 
-            // by cheerio we get the htmlTable from json2 
+            // as a response, we get the json  
+            // we load the htmlTable from json to Cheerio object to be able to use jquery selectors for getting specific elements
             const json2 = await response2.json();
             const $ = await cheerio.load(json2.htmlTable);
             
             // setting array for storing result of each page
             result = [];
         
-            // getting table header as text of elements that are in th and do not have class width-50  
+            // getting table header as text of elements that are in "th" and do not have class width-50  
             let tableHeader = $('th:not(.width-50)').map(function(){
                 return $(this).text();
             }).get();
@@ -96,6 +96,7 @@ Apify.main(async () => {
             };
 
             //console.log(result)
+            // adding one page result to result all
             resultAll = resultAll.concat(result);
 
 }
